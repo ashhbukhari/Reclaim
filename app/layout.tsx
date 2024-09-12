@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AppWalletProvider from "./components/AppWalletProvider";
+import { CanvasWalletProvider } from "./components/CanvasWalletProvider";
+import Container from "./components/Container";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,7 +32,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AppWalletProvider>{children}</AppWalletProvider>
+        <AppWalletProvider>
+          <CanvasWalletProvider>
+          <Container>
+            {children}
+          </Container>
+        </CanvasWalletProvider>
+      </AppWalletProvider>
         </body>
     </html>
   );
