@@ -26,7 +26,7 @@ export default function Home() {
 
   return (
     <main className="flex items-center justify-center min-h-screen">
-      <div className="border hover:border-slate-900 rounded p-4">
+      <div className="border rounded p-4">
         {isWalletConnected ? (
           <Claim />
         ) : (

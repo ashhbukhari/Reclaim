@@ -11,7 +11,7 @@ const nextConfig = {
 
                     {
                         key: "Content-Security-Policy",
-                        value: "connect-src 'self' https://api.dscvr.one https://api1.stg.dscvr.one https://*.helius-rpc.com; script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline ",
+                        value: "connect-src 'self' https://api.dscvr.one https://api1.stg.dscvr.one https://*.helius-rpc.com; script-src 'self' 'unsafe-eval' 'unsafe-inline';' ",
                     },
 
                 ],
