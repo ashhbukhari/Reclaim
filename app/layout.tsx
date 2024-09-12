@@ -2,15 +2,23 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import AppWalletProvider from "./components/AppWalletProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Create Next App",
-  description: "DSCVR Claim your sol canvas",
+  title: "LostSols",
+  description: "DSCVR LostSols canvas helps you claim sol from your empty accounts in your wallet in your wallet ",
+  // openGraph: {
+  //   title: "LostSols",
+  //   description: "Claim lost sols in your account",
+  //   type: "website",
+  //   url: "",
+  //   images: "https://pbs.twimg.com/media/GUhxBcIXIAABTbx?format=jpg&name=large"
+  // },
   other: {
     "dscvr:canvas:version": "vNext",
-    "og:image": "https://claimyoursol.com/",
+
   },
 };
 
@@ -21,7 +29,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <AppWalletProvider>{children}</AppWalletProvider>
+        </body>
     </html>
   );
 }
