@@ -1,4 +1,5 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+### Basic ETH Demo
+    This is a basic dapp that allows your view your address and balance once you connect wallet. It fetches details for base blockchain
 
 ## Getting Started
 
