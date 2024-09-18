@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Connection, PublicKey, Transaction, sendAndConfirmTransaction } from '@solana/web3.js';
+import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, AccountLayout, createCloseAccountInstruction } from '@solana/spl-token';
 import { useWallet } from '@solana/wallet-adapter-react';
 
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY ;
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY;
 const RPC_ENDPOINT = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
 
 const CloseZeroBalanceAccounts: React.FC = () => {
@@ -30,18 +30,24 @@ const CloseZeroBalanceAccounts: React.FC = () => {
                 return accountData.amount.toString() === '0';
             });
 
+            if (zeroBalanceAccounts.length === 0) {
+                setStatus('No zero balance accounts found. Nothing to close.');
+                setIsProcessing(false);
+                return;
+            }
+
             setStatus(`Found ${zeroBalanceAccounts.length} zero balance accounts. Closing...`);
 
-            const batchSize = 5; // Adjust this number based on performance
+            const batchSize = 5;
             for (let i = 0; i < zeroBalanceAccounts.length; i += batchSize) {
                 const batch = zeroBalanceAccounts.slice(i, i + batchSize);
                 await closeBatch(batch);
                 setStatus(`Closed ${Math.min(i + batchSize, zeroBalanceAccounts.length)} out of ${zeroBalanceAccounts.length} accounts`);
             }
 
-            setStatus('All zero balance accounts closed successfully');
+            setStatus('All lost sol claimed successfully');
         } catch (error) {
-            console.error('Error closing accounts:', error);
+            console.error('Error claiming sol:', error);
             setStatus(`Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
         } finally {
             setIsProcessing(false);
@@ -73,7 +79,7 @@ const CloseZeroBalanceAccounts: React.FC = () => {
             console.log(`Closed ${accounts.length} accounts. Signature: ${signature}`);
         } catch (error) {
             console.error('Error in closeBatch:', error);
-            throw error; // Re-throw the error to be caught in the main function
+            throw error;
         }
     };
 
@@ -83,11 +89,11 @@ const CloseZeroBalanceAccounts: React.FC = () => {
             <button
                 onClick={closeZeroBalanceAccounts}
                 disabled={!wallet.connected || isProcessing}
-                className=''
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
             >
-                {isProcessing ? 'Processing...' : 'Close Zero Balance Accounts'}
+                {isProcessing ? 'Processing...' : 'Claim lost sols'}
             </button>
-            <p>{status}</p>
+            <p className="mt-4">{status}</p>
         </div>
     );
 };
