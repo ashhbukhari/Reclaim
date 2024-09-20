@@ -3,7 +3,8 @@ import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, AccountLayout, createCloseAccountInstruction } from '@solana/spl-token';
 import { useWallet } from '@solana/wallet-adapter-react';
 
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY;
+
+const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "e3265bb1-10b4-4d4c-81b2-16f7ee44abfa";
 const RPC_ENDPOINT = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
 
 const CloseZeroBalanceAccounts: React.FC = () => {
