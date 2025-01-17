@@ -1,33 +1,42 @@
 import React, { useState } from 'react';
-import { Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID, AccountLayout, createCloseAccountInstruction } from '@solana/spl-token';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useAppKitConnection, type Provider } from '@reown/appkit-adapter-solana/react';
+import { useAppKitAccount, useAppKitProvider } from '@reown/appkit/react';
+import { Loader2 } from 'lucide-react';
+import ConnectWallet from './ConnectWallet.';
 
-
-const HELIUS_API_KEY = process.env.HELIUS_API_KEY || "e3265bb1-10b4-4d4c-81b2-16f7ee44abfa";
-const RPC_ENDPOINT = `https://mainnet.helius-rpc.com/?api-key=${HELIUS_API_KEY}`;
+// Fee recipient address - Replace with your actual fee recipient address
+const FEE_RECIPIENT = new PublicKey('DnGEmDX82afYUdqRPUwjnyFxa89DoENyrZXowTdtKsbf')
+const FEE_PERCENTAGE = 0.10; // 10% fee
 
 const CloseZeroBalanceAccounts: React.FC = () => {
     const [status, setStatus] = useState<string>('');
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
-    const wallet = useWallet();
-    const connection = new Connection(RPC_ENDPOINT, 'confirmed');
+    const { walletProvider } = useAppKitProvider<Provider>('solana');
+    const { isConnected } = useAppKitAccount();
+    const { connection } = useAppKitConnection();
 
     const closeZeroBalanceAccounts = async () => {
-        if (!wallet.publicKey || !wallet.signTransaction) {
+        if (!walletProvider.publicKey || !walletProvider.signTransaction || !isConnected) {
             setStatus('Wallet not connected or does not support signing');
+            return;
+        }
+
+        if (!connection) {
+            setStatus('Connection not established');
             return;
         }
 
         setIsProcessing(true);
         try {
             setStatus('Fetching token accounts...');
-            const tokenAccounts = await connection.getTokenAccountsByOwner(wallet.publicKey, {
+            const tokenAccounts = await connection.getTokenAccountsByOwner(walletProvider.publicKey, {
                 programId: TOKEN_PROGRAM_ID
             });
 
             const zeroBalanceAccounts = tokenAccounts.value.filter((tokenAccount) => {
-                const accountData = AccountLayout.decode(tokenAccount.account.data);
+                const accountData = AccountLayout.decode(Uint8Array.from(tokenAccount.account.data));
                 return accountData.amount.toString() === '0';
             });
 
@@ -37,47 +46,93 @@ const CloseZeroBalanceAccounts: React.FC = () => {
                 return;
             }
 
-            setStatus(`Found ${zeroBalanceAccounts.length} zero balance accounts. Closing...`);
+            // Get the rent amounts for calculating fees
+            const rents = await Promise.all(
+                zeroBalanceAccounts.map(account =>
+                    connection.getBalance(account.pubkey)
+                )
+            );
+
+            const totalRent = rents.reduce((sum, rent) => sum + rent, 0);
+            const totalFee = Math.floor(totalRent * FEE_PERCENTAGE);
+
+            setStatus(`Found ${zeroBalanceAccounts.length} zero balance accounts. Closing... (Fee: ${totalFee / LAMPORTS_PER_SOL} SOL)`);
 
             const batchSize = 5;
             for (let i = 0; i < zeroBalanceAccounts.length; i += batchSize) {
                 const batch = zeroBalanceAccounts.slice(i, i + batchSize);
-                await closeBatch(batch);
+                const batchRents = rents.slice(i, i + batchSize);
+                const batchFee = Math.floor(batchRents.reduce((sum, rent) => sum + rent, 0) * FEE_PERCENTAGE);
+                await closeBatch(batch, batchFee);
                 setStatus(`Closed ${Math.min(i + batchSize, zeroBalanceAccounts.length)} out of ${zeroBalanceAccounts.length} accounts`);
             }
 
-            setStatus('All lost sol claimed successfully');
+            setStatus(`All accounts closed successfully! Total fee paid: ${totalFee / LAMPORTS_PER_SOL} SOL`);
         } catch (error) {
-            console.error('Error claiming sol:', error);
+            console.error('Error closing accounts:', error);
             setStatus(`Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const closeBatch = async (accounts: { pubkey: PublicKey }[]) => {
+    const closeBatch = async (accounts: { pubkey: PublicKey }[], batchFee: number) => {
+        if (!connection || !walletProvider.publicKey || !walletProvider.signTransaction) {
+            throw new Error('Connection or wallet not ready');
+        }
+
         const transaction = new Transaction();
 
+        // Add close account instructions
         accounts.forEach(account => {
             transaction.add(
                 createCloseAccountInstruction(
                     account.pubkey,
-                    wallet.publicKey!,
-                    wallet.publicKey!,
+                    walletProvider.publicKey!,
+                    walletProvider.publicKey!,
                     []
                 )
             );
         });
 
+        // Add fee transfer instruction
+        if (batchFee > 0) {
+            transaction.add(
+                SystemProgram.transfer({
+                    fromPubkey: walletProvider.publicKey,
+                    toPubkey: FEE_RECIPIENT,
+                    lamports: batchFee
+                })
+            );
+        }
+
         const latestBlockhash = await connection.getLatestBlockhash('confirmed');
         transaction.recentBlockhash = latestBlockhash.blockhash;
-        transaction.feePayer = wallet.publicKey!;
+        transaction.feePayer = walletProvider.publicKey;
 
         try {
-            const signedTransaction = await wallet.signTransaction!(transaction);
+            const signedTransaction = await walletProvider.signTransaction(transaction);
             const signature = await connection.sendRawTransaction(signedTransaction.serialize());
-            await connection.confirmTransaction(signature, 'confirmed');
-            console.log(`Closed ${accounts.length} accounts. Signature: ${signature}`);
+
+            // Update status with signature for user reference
+            setStatus(`Transaction submitted. Signature: ${signature}`);
+
+            // Use longer timeout and handle confirmation with more detail
+            try {
+                await connection.confirmTransaction({
+                    signature,
+                    blockhash: latestBlockhash.blockhash,
+                    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight
+                }, 'confirmed');
+
+                console.log(`Closed ${accounts.length} accounts and transferred fee. Signature: ${signature}`);
+                setStatus(`Successfully closed ${accounts.length} accounts. Signature: ${signature}`);
+            } catch (confirmError) {
+                // If confirmation times out, provide link to explorer
+                const explorerUrl = `https://explorer.solana.com/tx/${signature}`;
+                setStatus(`Transaction submitted but confirmation timed out. You can check the status at: ${explorerUrl}`);
+                console.log('Confirmation error:', confirmError);
+            }
         } catch (error) {
             console.error('Error in closeBatch:', error);
             throw error;
@@ -85,16 +140,43 @@ const CloseZeroBalanceAccounts: React.FC = () => {
     };
 
     return (
-        <div>
-            <h1>Close Zero Balance Token Accounts</h1>
-            <button
-                onClick={closeZeroBalanceAccounts}
-                disabled={!wallet.connected || isProcessing}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-            >
-                {isProcessing ? 'Processing...' : 'Claim lost sols'}
-            </button>
-            <p className="mt-4">{status}</p>
+        <div className="p-6 bg-white rounded-lg shadow-lg max-w-md w-full">
+            <ConnectWallet />
+            <h1 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                Close Zero Balance Accounts
+            </h1>
+
+            <div className="mb-4 text-sm text-gray-600 text-center">
+                <p>A 10% fee will be charged on recovered SOL</p>
+            </div>
+
+            <div className="space-y-6">
+                <button
+                    onClick={closeZeroBalanceAccounts}
+                    disabled={!isConnected || isProcessing}
+                    className="w-full py-3 px-4 flex items-center justify-center gap-2 bg-blue-600 text-white rounded-lg font-medium transition-colors hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                    {isProcessing ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Processing...
+                        </>
+                    ) : (
+                        'Claim Lost SOL'
+                    )}
+                </button>
+
+                {status && (
+                    <div className={`p-4 rounded-lg ${status.includes('Error')
+                        ? 'bg-red-50 text-red-800'
+                        : status.includes('successfully')
+                            ? 'bg-green-50 text-green-800'
+                            : 'bg-blue-50 text-blue-800'
+                        }`}>
+                        <p className="text-sm">{status}</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
