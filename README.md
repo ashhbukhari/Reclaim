@@ -121,10 +121,10 @@ Lost SOLs is built using modern Web3 and full-stack technologies. For developers
 
 ### Integration Steps
 
-1. Set up a Next.js project:
+1. Clone the repositary:
 ```bash
-npx create-next-app@latest lost-sols --typescript --tailwind
-cd lost-sols
+git clone https://github.com/arkade-01/LostSols.git
+cd LostSols
 ```
 
 2. Install required dependencies:
@@ -132,37 +132,11 @@ cd lost-sols
 npm install @reown/appkit @reown/appkit-adapter-solana @solana/web3.js @solana/spl-token
 ```
 
-3. Configure Reown AppKit in your Next.js app:
-```typescript
-// app/providers.tsx
-'use client';
-
-import { AppKitProvider } from '@reown/appkit/react';
-import { SolanaProvider } from '@reown/appkit-adapter-solana/react';
-
-export function Providers({ children }: { children: React.ReactNode }) {
-  return (
-    <AppKitProvider>
-      <SolanaProvider>
-        {children}
-      </SolanaProvider>
-    </AppKitProvider>
-  );
-}
+3. Start the server:
+```bash
+npm run dev
 ```
 
-4. Use hooks in your components:
-```typescript
-'use client';
-
-import { useAppKitConnection, useAppKitAccount } from '@reown/appkit/react';
-
-export default function YourComponent() {
-  const { connection } = useAppKitConnection();
-  const { isConnected } = useAppKitAccount();
-  // ... rest of your component
-}
-```
 
 ### Best Practices
 - Use Next.js 14's app router for optimal performance
@@ -179,10 +153,8 @@ For more detailed documentation and examples:
 ## Support
 
 ### Need Help?
-- Check transaction status: https://explorer.solana.com
-- Email support: support@lostsols.com
-- Discord community: discord.gg/lostsols
-- Twitter updates: @lostsols
+- Check transaction status: https://solscan.io
+- Twitter updates: https://x.com/arkade_dev
 
 ### Troubleshooting Tips
 - Ensure your wallet is properly connected

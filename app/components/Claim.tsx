@@ -129,7 +129,7 @@ const CloseZeroBalanceAccounts: React.FC = () => {
                 setStatus(`Successfully closed ${accounts.length} accounts. Signature: ${signature}`);
             } catch (confirmError) {
                 // If confirmation times out, provide link to explorer
-                const explorerUrl = `https://explorer.solana.com/tx/${signature}`;
+                const explorerUrl = `https://solscan.io/tx/${signature}`;
                 setStatus(`Transaction submitted but confirmation timed out. You can check the status at: ${explorerUrl}`);
                 console.log('Confirmation error:', confirmError);
             }
