@@ -52,7 +52,7 @@ The integration of Reown AppKit ensures Lost SOLs provides a reliable, secure, a
 ## User Guide
 
 ### Getting Started
-1. Visit Lost SOLs website[https://https://lostsols.vercel.app/]
+1. Visit Lost SOLs [website](https://lostsols.vercel.app/)
 2. Click "Connect Wallet" and approve the connection
 3. Wait for the account scan to complete
 4. Review the found accounts and potential SOL recovery
