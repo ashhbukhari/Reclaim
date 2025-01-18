@@ -67,7 +67,7 @@ const CloseZeroBalanceAccounts: React.FC = () => {
                 setStatus(`Closed ${Math.min(i + batchSize, zeroBalanceAccounts.length)} out of ${zeroBalanceAccounts.length} accounts`);
             }
 
-            setStatus(`All accounts closed successfully! Total fee paid: ${totalFee / LAMPORTS_PER_SOL} SOL`);
+            setStatus(`All accounts closed successfully!`);
         } catch (error) {
             console.error('Error closing accounts:', error);
             setStatus(`Error: ${error instanceof Error ? error.message : 'An unknown error occurred'}`);
