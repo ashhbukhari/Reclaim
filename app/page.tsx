@@ -55,7 +55,7 @@ export default function Home() {
           <p className="flex items-center justify-center gap-1">
             Built by{" "}
             <a
-              href="https://twitter.com/YOUR_TWITTER_HANDLE"
+              href="https://twitter.com/arkade_dev"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
