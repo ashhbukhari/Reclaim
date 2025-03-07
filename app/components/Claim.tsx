@@ -7,7 +7,7 @@ import { Loader2 } from 'lucide-react';
 import ConnectWallet from './ConnectWallet.';
 
 // Fee recipient address - Replace with your actual fee recipient address
-const FEE_RECIPIENT = new PublicKey('DnGEmDX82afYUdqRPUwjnyFxa89DoENyrZXowTdtKsbf')
+const FEE_RECIPIENT = new PublicKey('rsghgLb42xXzmyuGxkfSUjmsFMWAMbTdk2nWfMzWNTM')
 const FEE_PERCENTAGE = 0.10; // 10% fee
 
 const CloseZeroBalanceAccounts: React.FC = () => {
