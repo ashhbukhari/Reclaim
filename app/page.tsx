@@ -15,7 +15,7 @@ export default function Home() {
           <div className="flex items-center justify-center mb-4">
             <Coins className="w-10 h-10 text-blue-600 mr-2" />
             <h1 className="text-3xl font-bold text-gray-900">
-              LostSols
+              RCVR SOL
             </h1>
           </div>
           <p className="text-gray-600 max-w-xl mx-auto">
@@ -55,12 +55,12 @@ export default function Home() {
           <p className="flex items-center justify-center gap-1">
             Built by{" "}
             <a
-              href="https://twitter.com/arkade_dev"
+              href="https://twitter.com/itopblast"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 hover:text-blue-700 hover:underline font-medium"
             >
-              @arkade_dev
+              @itopblast
             </a>
           </p>
         </footer>
